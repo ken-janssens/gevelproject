@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Het Gevel Project — 2627 GEP/GEV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC215ijZdaDakahJSK_dluEkttbfmKWtiY",
+    authDomain: "gevelproject.firebaseapp.com",
+    projectId: "gevelproject",
+    storageBucket: "gevelproject.firebasestorage.app",
+    messagingSenderId: "949415259829",
+    appId: "1:949415259829:web:d78caf1be24f5e40c158fc"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const DOC_REF = doc(db, 'gevelproject', 'appdata');
+
+  window.firebaseSave = async function(data) {
+    try {
+      await setDoc(DOC_REF, { payload: JSON.stringify(data), savedAt: new Date().toISOString() });
+      return true;
+    } catch(e) { console.error('Firebase save error:', e); return false; }
+  };
+
+  window.firebaseLoad = async function() {
+    try {
+      const snap = await getDoc(DOC_REF);
+      if (snap.exists()) return JSON.parse(snap.data().payload);
+      return null;
+    } catch(e) { console.error('Firebase load error:', e); return null; }
+  };
+
+  window.firebaseListen = function(callback) {
+    let firstSnapshot = true;
+    return onSnapshot(DOC_REF, (snap) => {
+      if (firstSnapshot) { firstSnapshot = false; return; }
+      if (snap.exists()) {
+        try { callback(JSON.parse(snap.data().payload)); } catch(e) {}
+      }
+    });
+  };
+
+  window.firebaseReady = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+  :root {
+    --obv-dark: #1a1a1a;
+    --obv-cream: #f5f0e8;
+    --obv-warm: #e8e0d0;
+    --obv-brick: #8b3a1e;
+    --obv-brick-light: #c4622d;
+    --obv-sand: #c9b99a;
+    --obv-green: #2d5016;
+    --obv-green-light: #4a7c23;
+    --obv-blue: #1e3a5f;
+    --obv-text: #2c2a26;
+    --obv-muted: #6b6560;
+    --obv-border: rgba(44,42,38,0.12);
+    --obv-border-strong: rgba(44,42,38,0.25);
+    --radius: 6px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--obv-cream);
+    color: var(--obv-text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: var(--obv-dark);
+    color: #f5f0e8;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .site-header .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--obv-sand);
+    opacity: 0.7;
+    text-decoration: none;
+  }
+  .site-header .project-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .site-header .meta {
+    font-size: 12px;
+    color: rgba(245,240,232,0.45);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── NAV ── */
+  .site-nav {
+    background: var(--obv-dark);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    gap: 0;
+    padding: 0 2rem;
+    overflow-x: auto;
+  }
+  .nav-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.45);
+    padding: 0 1.25rem;
+    height: 42px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: rgba(245,240,232,0.8); }
+  .nav-btn.active {
+    color: var(--obv-sand);
+    border-bottom-color: var(--obv-brick-light);
+  }
+
+  /* ── LAYOUT ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* ── PAGE HERO ── */
+  .page-hero {
+    background: var(--obv-dark);
+    color: #f5f0e8;
+    padding: 2.5rem 2rem 2rem;
+    border-bottom: 3px solid var(--obv-brick);
+  }
+  .page-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .page-hero h1 span {
+    color: var(--obv-brick-light);
+  }
+  .page-hero p {
+    color: rgba(245,240,232,0.55);
+    font-size: 13px;
+    margin-top: 0.5rem;
+    max-width: 600px;
+  }
+  .page-hero .hero-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hero-stat .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #f5f0e8;
+  }
+  .hero-stat .lbl {
+    font-size: 11px;
+    color: rgba(245,240,232,0.4);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .days-countdown {
+    color: var(--obv-brick-light) !important;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+  }
+  .section-header:first-child { margin-top: 0; }
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--obv-muted);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: #fff;
+    border: 1px solid var(--obv-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .badge-urgent { background: #fde8e8; color: #8b1a1a; }
+  .badge-todo { background: #fef3e2; color: #8b5e1a; }
+  .badge-done { background: #e8f5e8; color: #1a5c1a; }
+  .badge-info { background: #e2edf8; color: #1a3d6b; }
+  .badge-parade { background: #f3e8f5; color: #5a1a6b; }
+  .badge-ntgent { background: #e8f0f5; color: #1a3a4b; }
+
+  /* ── TODO LIST ── */
+  .todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--obv-border);
+  }
+  .todo-item:last-child { border-bottom: none; }
+  .todo-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--obv-border-strong);
+    border-radius: 4px;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: transparent;
+    font-size: 11px;
+  }
+  .todo-check.checked {
+    background: var(--obv-green);
+    border-color: var(--obv-green);
+    color: white;
+  }
+  .todo-text { flex: 1; font-size: 13px; line-height: 1.5; }
+  .todo-text.checked-text { text-decoration: line-through; color: var(--obv-muted); }
+  .todo-person {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--obv-brick);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+  .todo-add {
+    display: flex;
+    gap: 8px;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--obv-border);
+  }
+  .todo-add input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--obv-border-strong);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: var(--obv-cream);
+    color: var(--obv-text);
+    outline: none;
+  }
+  .todo-add input:focus { border-color: var(--obv-brick-light); }
+  .todo-add select {
+    padding: 8px 10px;
+    border: 1px solid var(--obv-border-strong);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    background: var(--obv-cream);
+    color: var(--obv-text);
+    outline: none;
+    cursor: pointer;
+  }
+  .todo-add button {
+    padding: 8px 14px;
+    background: var(--obv-brick);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+  }
+  .todo-add button:hover { background: var(--obv-brick-light); }
+
+  /* ── TIMELINE ── */
+  .timeline { position: relative; }
+  .timeline-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 44px;
+    bottom: -8px;
+    width: 1px;
+    background: var(--obv-border);
+  }
+  .timeline-item:last-child::before { display: none; }
+  .timeline-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Syne', sans-serif;
+    position: relative;
+    z-index: 1;
+  }
+  .dot-past { background: var(--obv-warm); color: var(--obv-muted); }
+  .dot-upcoming { background: var(--obv-brick); color: white; }
+  .dot-future { background: var(--obv-border); color: var(--obv-muted); border: 1px solid var(--obv-border-strong); }
+  .dot-key { background: var(--obv-dark); color: var(--obv-sand); }
+  .timeline-content { flex: 1; padding-top: 4px; }
+  .timeline-date {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--obv-muted);
+    text-transform: uppercase;
+  }
+  .timeline-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 2px 0;
+  }
+  .timeline-desc { font-size: 12px; color: var(--obv-muted); }
+
+  /* ── VERSLAG ── */
+  .verslag-item {
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--obv-border);
+  }
+  .verslag-item:last-child { border-bottom: none; }
+  .verslag-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  .verslag-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .verslag-date { font-size: 11px; color: var(--obv-muted); }
+  .verslag-summary {
+    font-size: 12px;
+    color: var(--obv-muted);
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+  .verslag-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-link {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--obv-brick);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    border: 1px solid var(--obv-brick);
+    padding: 3px 10px;
+    border-radius: 20px;
+    transition: all 0.15s;
+  }
+  .btn-link:hover { background: var(--obv-brick); color: white; }
+
+  /* ── DOCUMENT UPLOAD ── */
+  .upload-zone {
+    border: 2px dashed var(--obv-border-strong);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--obv-cream);
+  }
+  .upload-zone:hover {
+    border-color: var(--obv-brick-light);
+    background: #fdf8f4;
+  }
+  .upload-zone input[type="file"] { display: none; }
+  .upload-icon { font-size: 32px; margin-bottom: 0.5rem; }
+  .upload-zone h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .upload-zone p { font-size: 12px; color: var(--obv-muted); }
+
+  .doc-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .doc-form input, .doc-form select {
+    padding: 8px 12px;
+    border: 1px solid var(--obv-border-strong);
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: var(--obv-text);
+    outline: none;
+  }
+  .doc-form input:focus, .doc-form select:focus { border-color: var(--obv-brick-light); }
+  .doc-form input[type="text"]:nth-child(1) { grid-column: 1 / -1; }
+  .doc-submit {
+    grid-column: 1 / -1;
+    padding: 10px;
+    background: var(--obv-brick);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+  }
+  .doc-submit:hover { background: var(--obv-brick-light); }
+
+  /* ── DOCUMENT LIST ── */
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--obv-border);
+  }
+  .doc-item:last-child { border-bottom: none; }
+  .doc-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .doc-icon-pdf { background: #fde8e8; }
+  .doc-icon-doc { background: #e2edf8; }
+  .doc-icon-sheet { background: #e8f5e8; }
+  .doc-icon-plan { background: #f3e8f5; }
+  .doc-info { flex: 1 }
+  .doc-name { font-size: 13px; font-weight: 500; }
+  .doc-meta { font-size: 11px; color: var(--obv-muted); }
+  .doc-link {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--obv-brick);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid currentColor;
+    border-radius: 20px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .doc-link:hover { background: var(--obv-brick); color: white; }
+
+  /* ── CONTACTS ── */
+  .contact-card {
+    padding: 1rem;
+    border: 1px solid var(--obv-border);
+    border-radius: var(--radius-lg);
+    background: white;
+  }
+  .contact-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+  }
+  .contact-name { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; }
+  .contact-role { font-size: 11px; color: var(--obv-muted); margin-bottom: 0.5rem; }
+  .contact-dept { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* ── NOTES ── */
+  .notes-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid var(--obv-border-strong);
+    border-radius: var(--radius-lg);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    background: var(--obv-cream);
+    color: var(--obv-text);
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+  }
+  .notes-input:focus { border-color: var(--obv-brick-light); background: white; }
+
+  .note-item {
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid var(--obv-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: 0.75rem;
+  }
+  .note-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+  .note-author { font-size: 12px; font-weight: 600; color: var(--obv-brick); }
+  .note-date { font-size: 11px; color: var(--obv-muted); }
+  .note-text { font-size: 13px; line-height: 1.6; }
+
+  /* ── URGENT PANEL ── */
+  .urgent-bar {
+    background: var(--obv-brick);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-family: 'Syne', sans-serif;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .urgent-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--obv-border);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .urgent-item:last-child { border-bottom: none; }
+  .urgent-who {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--obv-brick);
+    white-space: nowrap;
+  }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--obv-border); margin-bottom: 1.5rem; }
+  .tab-btn {
+    padding: 0.6rem 1.25rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--obv-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--obv-text); }
+  .tab-btn.active { color: var(--obv-brick); border-bottom-color: var(--obv-brick); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── PIJLER CARDS ── */
+  .pijler-card {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    border-top: 4px solid;
+    background: white;
+    border-left: 1px solid var(--obv-border);
+    border-right: 1px solid var(--obv-border);
+    border-bottom: 1px solid var(--obv-border);
+  }
+  .pijler-card.parade { border-top-color: var(--obv-brick); }
+  .pijler-card.ntgent { border-top-color: var(--obv-blue); }
+  .pijler-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .pijler-card.parade .pijler-label { color: var(--obv-brick); }
+  .pijler-card.ntgent .pijler-label { color: var(--obv-blue); }
+  .pijler-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  .pijler-desc { font-size: 13px; color: var(--obv-muted); line-height: 1.6; }
+  .pijler-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--obv-border);
+  }
+  .pijler-stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .pijler-stat-lbl { font-size: 11px; color: var(--obv-muted); }
+
+  /* ── ADD NOTE FORM ── */
+  .add-note-form {
+    background: var(--obv-warm);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  .add-note-form .form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .add-note-form select, .add-note-form input {
+    padding: 7px 10px;
+    border: 1px solid var(--obv-border-strong);
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    color: var(--obv-text);
+    outline: none;
+  }
+  .btn-primary {
+    padding: 8px 16px;
+    background: var(--obv-brick);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--obv-brick-light); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 0.5rem 0; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .progress-bar {
+    height: 6px;
+    background: var(--obv-warm);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .fill-brick { background: var(--obv-brick); }
+  .fill-blue { background: var(--obv-blue); }
+  .fill-green { background: var(--obv-green); }
+
+  /* ── MEETING NOTES ── */
+  .meeting-section {
+    border: 1px solid var(--obv-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .meeting-header {
+    background: var(--obv-dark);
+    color: #f5f0e8;
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .meeting-header-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .meeting-header-date { font-size: 11px; color: rgba(245,240,232,0.45); }
+  .meeting-body { padding: 1rem; display: none; }
+  .meeting-body.open { display: block; }
+  .meeting-body p { font-size: 13px; line-height: 1.7; margin-bottom: 0.75rem; }
+  .meeting-body ul { padding-left: 1.25rem; }
+  .meeting-body li { font-size: 13px; line-height: 1.7; margin-bottom: 0.25rem; }
+  .meeting-body strong { font-weight: 600; color: var(--obv-brick); }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 11px;
+    color: var(--obv-muted);
+    border-top: 1px solid var(--obv-border);
+    margin-top: 3rem;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .doc-form { grid-template-columns: 1fr; }
+    .doc-form input[type="text"]:nth-child(1) { grid-column: 1; }
+    .doc-form select { grid-column: 1; }
+    .doc-submit { grid-column: 1; }
+    .container { padding: 1rem; }
+    .page-hero { padding: 1.5rem 1rem 1.5rem; }
+    .page-hero h1 { font-size: 24px; }
+  }
+
+  /* ── PASSWORD SCREEN ── */
+  #pw-screen {
+    position: fixed; inset: 0; background: #1a1a1a;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; flex-direction: column;
+  }
+  #pw-screen.hidden { display: none; }
+  .pw-box {
+    background: #242420; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 2.5rem 2.5rem 2rem;
+    width: 100%; max-width: 380px; text-align: center;
+  }
+  .pw-logo { font-family: 'Syne',sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c9b99a; opacity: 0.6; margin-bottom: 1.5rem; }
+  .pw-title { font-family: 'Syne',sans-serif; font-size: 24px; font-weight: 800; color: #f5f0e8; line-height: 1.1; margin-bottom: 0.4rem; }
+  .pw-title span { color: #c4622d; }
+  .pw-sub { font-size: 13px; color: rgba(245,240,232,0.35); margin-bottom: 2rem; }
+  .pw-input {
+    width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    font-size: 15px; font-family: 'Inter',sans-serif; color: #f5f0e8;
+    text-align: center; letter-spacing: 0.12em; outline: none; margin-bottom: 0.75rem; transition: border-color 0.15s;
+  }
+  .pw-input:focus { border-color: #c4622d; }
+  .pw-input.error { border-color: #c0392b; animation: shake 0.3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .pw-btn {
+    width: 100%; padding: 12px; background: #8b3a1e; color: white; border: none;
+    border-radius: 8px; font-family: 'Syne',sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.15s;
+  }
+  .pw-btn:hover { background: #c4622d; }
+  .pw-error { font-size: 12px; color: #e74c3c; margin-top: 0.5rem; min-height: 18px; }
+  .pw-hint { font-size: 11px; color: rgba(245,240,232,0.2); margin-top: 1.5rem; }
+
+</style>
+</head>
+<body>
+<div id="pw-screen">
+  <div class="pw-box">
+    <div class="pw-logo">Opera Ballet Vlaanderen</div>
+    <div class="pw-title">Het <span>Gevel</span>Project</div>
+    <div class="pw-sub">2627 GEP/GEV — Intern werkdocument</div>
+    <input class="pw-input" type="password" id="pw-input" placeholder="Wachtwoord"
+      onkeydown="if(event.key==='Enter') checkPw()" autocomplete="current-password">
+    <button class="pw-btn" onclick="checkPw()">Toegang</button>
+    <div class="pw-error" id="pw-error"></div>
+    <div class="pw-hint">Contacteer Kenny of Lennert voor toegang.</div>
+  </div>
+</div>
+<div id="app-content" style="display:none;">
+
+<header class="site-header">
+  <span class="logo">Opera Ballet Vlaanderen</span>
+  <span class="project-title">2627 GEP/GEV</span>
+  <span class="meta" id="live-date"></span>
+  <span id="save-indicator" style="font-size:11px;color:#4a7c23;opacity:0;transition:opacity 0.5s;font-weight:600;margin-left:1rem;"></span>
+</header>
+
+<nav class="site-nav">
+  <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+  <button class="nav-btn" onclick="showPage('parade')">Parade</button>
+  <button class="nav-btn" onclick="showPage('ntgent')">NT Gent</button>
+  <button class="nav-btn" onclick="showPage('verslagen')">Verslagen</button>
+  <button class="nav-btn" onclick="showPage('planning')">Planning</button>
+  <button class="nav-btn" onclick="showPage('documenten')">Documenten</button>
+  <button class="nav-btn" onclick="showPage('team')">Team</button>
+</nav>
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <p style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.5rem;">Productie overzicht</p>
+      <h1>Het <span>Gevel</span>Project</h1>
+      <p>Twee Gentse gevels wisselen van plek in een feestelijke optocht — daarna vormen ze het decor voor een voorstelling in NTGent. Opera Ballet Vlaanderen × Thomas Verstraeten.</p>
+      <div class="hero-meta">
+        <div class="hero-stat">
+          <span class="val days-countdown" id="countdown-parade">—</span>
+          <span class="lbl">Dagen tot parade</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val days-countdown" id="countdown-premiere">—</span>
+          <span class="lbl">Dagen tot première</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">12/09/26</span>
+          <span class="lbl">Parade van Gevels</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">29/10/26</span>
+          <span class="lbl">Première NTGent</span>
+        </div>
+        <div class="hero-stat">
+          <span class="val">8</span>
+          <span class="lbl">Voorstellingen</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Urgente items -->
+    <div class="section-header" style="margin-top:0;margin-bottom:0.5rem;">
+      <span class="section-label">⚡ Dringende acties</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+      <div class="urgent-bar">🔴 Open actiepunten — kernteam</div>
+      <div id="urgent-list"></div>
+    </div>
+
+    <!-- Twee pijlers -->
+    <div class="section-header">
+      <span class="section-label">Twee pijlers</span>
+    </div>
+    <div class="grid-2" style="margin-bottom:1.5rem;">
+      <div class="pijler-card parade">
+        <div class="pijler-label">Pijler 1 — Buitenproductie</div>
+        <div class="pijler-title">Parade van Gevels</div>
+        <div class="pijler-desc">Twee gevels wisselen van plek in een feestelijke optocht door Gent. Historische gevel (Vrijdagsmarkt 7) en Arbeidersgevel (Fonteineplein 25) reizen elk ca. 2,2–2,6 km.</div>
+        <div class="pijler-stats">
+          <div>
+            <div class="pijler-stat-val">12/09</div>
+            <div class="pijler-stat-lbl">Paradedag 2026</div>
+          </div>
+          <div>
+            <div class="pijler-stat-val">2</div>
+            <div class="pijler-stat-lbl">Locaties / diepladers</div>
+          </div>
+          <div>
+            <div class="pijler-stat-val">4</div>
+            <div class="pijler-stat-lbl">Teams op locatie</div>
+          </div>
+        </div>
+      </div>
+      <div class="pijler-card ntgent">
+        <div class="pijler-label">Pijler 2 — Voorstelling</div>
+        <div class="pijler-title">Voorstelling NTGent</div>
+        <div class="pijler-desc">De twee gevels vormen het decor van een voorstelling in de schouwburg van NTGent. Regie & scenografie: Thomas Verstraeten. Muzikale leiding: Wouter Deltour.</div>
+        <div class="pijler-stats">
+          <div>
+            <div class="pijler-stat-val">29/10</div>
+            <div class="pijler-stat-lbl">Première 2026</div>
+          </div>
+          <div>
+            <div class="pijler-stat-val">8</div>
+            <div class="pijler-stat-lbl">Voorstellingen</div>
+          </div>
+          <div>
+            <div class="pijler-stat-val">09/11</div>
+            <div class="pijler-stat-lbl">Afbouw</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress + volgende stappen -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Voortgang productie</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Decorbouw historische gevel</span><span>75%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-brick" style="width:75%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Decorbouw arbeidersgevel</span><span>55%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-brick" style="width:55%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Achterbouw / bokconstructie</span><span>20%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-blue" style="width:20%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>SIF-dossier & veiligheid</span><span>30%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-blue" style="width:30%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Maskers (960 st.)</span><span>10%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-green" style="width:10%"></div></div>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>NTGent — vloer & constructie</span><span>15%</span></div>
+          <div class="progress-bar"><div class="progress-fill fill-blue" style="width:15%"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Volgende mijlpalen</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot dot-upcoming">W23</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Week 23 — binnenkort</div>
+              <div class="timeline-title">Opmeten locaties Gent</div>
+              <div class="timeline-desc">Vrijdagsmarkt 7 + Fonteineplein 25</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-future">W24</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Week 24</div>
+              <div class="timeline-title">Uitzetten locatie Zele</div>
+              <div class="timeline-desc">Terrein aftekenen met krijtspuitbussen</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-future">W26</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Week 26 — einde seizoen 25/26</div>
+              <div class="timeline-title">Alles afgewerkt in Zele</div>
+              <div class="timeline-desc">Afwerking / patine / rechtzettten</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-future">W27</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Week 27 — juni</div>
+              <div class="timeline-title">Bokken opzetten + diepladers Zele</div>
+              <div class="timeline-desc">Kraantje 26/6–10/7</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-key">17/8</div>
+            <div class="timeline-content">
+              <div class="timeline-date">17 augustus 2026 — week 34</div>
+              <div class="timeline-title">Start proefopbouw Zele</div>
+              <div class="timeline-desc">Zie planning materieel/personeel</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-key">12/9</div>
+            <div class="timeline-content">
+              <div class="timeline-date">12 september 2026</div>
+              <div class="timeline-title">🎭 Parade van Gevels</div>
+              <div class="timeline-desc">11u vertrek — 19u slotfeest</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Snel notitie toevoegen -->
+    <div class="section-header">
+      <span class="section-label">Snelle notitie</span>
+    </div>
+    <div class="card">
+      <div class="add-note-form" style="background:transparent;padding:0;">
+        <div class="form-row">
+          <select id="note-author" style="min-width:100px;">
+            <option value="Kenny">Kenny</option>
+            <option value="Lennert">Lennert</option>
+          </select>
+          <input type="text" id="note-title" placeholder="Onderwerp (optioneel)" style="flex:1;">
+        </div>
+        <textarea class="notes-input" id="note-text" placeholder="Schrijf hier een snelle notitie of opmerking..."></textarea>
+        <div style="margin-top:0.5rem;text-align:right;">
+          <button class="btn-primary" onclick="addNote()">Notitie toevoegen</button>
+        </div>
+      </div>
+      <div id="notes-list" style="margin-top:1rem;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PARADE ═══════════════════════════════ -->
+<div class="page" id="page-parade">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <p style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.5rem;">Pijler 1</p>
+      <h1>Parade van <span>Gevels</span></h1>
+      <p>Zaterdag 12 september 2026 — Stad Gent. Twee gevels wisselen van plek via een feestelijke optocht. 11u vertrek, 13u aankomst + start opbouw, 19u slotfeest.</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('parade', 'locaties')">Locaties</button>
+      <button class="tab-btn" onclick="showTab('parade', 'scenario')">Scenario & transport</button>
+      <button class="tab-btn" onclick="showTab('parade', 'todos')">To-do's</button>
+      <button class="tab-btn" onclick="showTab('parade', 'rekwisieten')">Rekwisieten</button>
+    </div>
+
+    <div class="tab-panel active" id="parade-locaties">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="color:var(--obv-brick);">🏛 Historische Gevel</div>
+          <p style="font-size:13px;margin-bottom:1rem;color:var(--obv-muted);">Gevel A — startlocatie / eindlocatie na wissel</p>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr><td style="padding:5px 0;color:var(--obv-muted);width:40%;">Adres</td><td><strong>Vrijdagsmarkt 7, Gent</strong></td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Hoogte gevel</td><td>13.565 mm (tot dakgoot)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Breedte gevel</td><td>4.400 mm</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Route afstand</td><td>ca. 2,6 km (blauw)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Kraanwagen</td><td>Dieplader + kraan (+20m)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Contact eigenaar</td><td>Contract ondertekend ✓</td></tr>
+          </table>
+          <div style="margin-top:1rem;">
+            <a href="https://maps.app.goo.gl/B8xgwUJd3bZXKzh7A" target="_blank" class="btn-link">📍 Google Maps</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--obv-blue);">🏗 Arbeidersgevel</div>
+          <p style="font-size:13px;margin-bottom:1rem;color:var(--obv-muted);">Gevel B — startlocatie / eindlocatie na wissel</p>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr><td style="padding:5px 0;color:var(--obv-muted);width:40%;">Adres</td><td><strong>Fonteineplein 25, Gent</strong></td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Hoogte gevel</td><td>9.180 mm (+ dak 1.691 mm)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Breedte gevel</td><td>4.400 mm</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Route afstand</td><td>ca. 2,2 km (rood)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Kraanwagen</td><td>Dieplader + kraan (+20m)</td></tr>
+            <tr><td style="padding:5px 0;color:var(--obv-muted);">Bijzonderheid</td><td>Dakje + spiegel (polycarbonaat)</td></tr>
+          </table>
+          <div style="margin-top:1rem;">
+            <span class="badge badge-info">Transporteur: De Vreese</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:1rem;">
+        <div class="card-title">Dagplanning — zaterdag 12 september 2026</div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot dot-past" style="font-size:10px;">vr</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Vrijdag 11/09 — 14:00</div>
+              <div class="timeline-title">Aankomst materieel op locaties</div>
+              <div class="timeline-desc">16u: start afbouw / aftakelen op dieplader — 22u: gevel klaar op dieplader (overnight)</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-upcoming" style="font-size:10px;">11u</div>
+            <div class="timeline-content">
+              <div class="timeline-date">Zaterdag 12/09 — 11:00</div>
+              <div class="timeline-title">Vertrek parade "de karavaan" + aankomst crew</div>
+              <div class="timeline-desc">2 teams per locatie — blijven op locatie</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-upcoming" style="font-size:10px;">13u</div>
+            <div class="timeline-content">
+              <div class="timeline-date">13:00</div>
+              <div class="timeline-title">Aankomst parade + start opbouw wissellocatie</div>
+              <div class="timeline-desc">Eerste keer opbouw met publiek erbij — 3 onderdelen per gevel</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot dot-key" style="font-size:10px;">19u</div>
+            <div class="timeline-content">
+              <div class="timeline-date">19:00</div>
+              <div class="timeline-title">🎉 Start slotfeest</div>
+              <div class="timeline-desc">Doel: klaar zijn — reserve tot 22:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="parade-scenario">
+      <div class="card">
+        <div class="card-title">Transport & opbouwscenario</div>
+        <div style="font-size:13px;line-height:1.8;color:var(--obv-text);">
+          <p style="margin-bottom:1rem;"><strong style="color:var(--obv-brick);">Transporteur:</strong> De Vreese (dieplader met kraan). Offertes ook aangevraagd bij Sarens en Aertssen.</p>
+          <p style="margin-bottom:1rem;"><strong style="color:var(--obv-brick);">Opdelingsprincipe historische gevel:</strong> 3 verticale frames onderaan + horizontaal frame midden + 3 verticale top frames = 9 delen (hoogtewerkers + bouwkraan)</p>
+          <p style="margin-bottom:1rem;"><strong style="color:var(--obv-brick);">Gevels gericht naar:</strong> Justitiepaleis. Gevolgen voor positionering en manoeuvres vrachtwagens op beide pleinen worden onderzocht.</p>
+          <p style="margin-bottom:1rem;"><strong style="color:var(--obv-brick);">Dakje Fonteineplein:</strong> wordt op dieplader aan gevel bevestigd (stukje/hap weggelaten om over platform te passen). Wordt opgebouwd op Vrijdagmarkt, bovenop dakgoot FP, gekanteld + bevestigd tegen gevel VM.</p>
+          <p style="margin-bottom:1rem;"><strong style="color:var(--obv-brick);">Spiegel idee VM:</strong> polycarbonaat spiegel op licht frame, bevestigd tijdens voorbereiding — weerkaatst de lucht.</p>
+          <p style="margin-bottom:0;"><strong style="color:var(--obv-brick);">Parade begeleid door:</strong> 404</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1rem;">
+        <div class="card-title">Vragen & obstakels</div>
+        <ul style="font-size:13px;padding-left:1.25rem;line-height:1.9;">
+          <li>Cirkelsegment achteraan — oplossing nog open</li>
+          <li>Richtingsbepaling vertrek op locatie ifv manoeuvre → Thomas bevragen</li>
+          <li>Wat met plantenbakken Vrijdagsmarkt en muurplant Fonteineplein?</li>
+          <li>Is het nodig hekken te zetten rond trailers 's nachts? Nachtwaker?</li>
+          <li>Wie doet de laatste veiligheidscontrole — Stad Gent of intern?</li>
+          <li>Rijplaten Fonteineplein: wie legt ze — stad of wij?</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="parade-todos">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">To-do's — Bert (TPL/TO)</div>
+          <div id="todos-bert"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw item voor Bert..." id="todo-input-bert">
+            <button onclick="addTodo('bert')">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">To-do's — Podiumtechniek (Ken/Lennert)</div>
+          <div id="todos-pt"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw item PT..." id="todo-input-pt">
+            <button onclick="addTodo('pt')">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">To-do's — Decoratelier (Jurgen/Dimi)</div>
+          <div id="todos-deco"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw item Decoratelier..." id="todo-input-deco">
+            <button onclick="addTodo('deco')">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">To-do's — Algemeen</div>
+          <div id="todos-algemeen"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw algemeen item..." id="todo-input-algemeen">
+            <select id="todo-person-algemeen" style="min-width:80px;">
+              <option value="Kenny">Kenny</option>
+              <option value="Lennert">Lennert</option>
+              <option value="Bert">Bert</option>
+              <option value="Jurgen">Jurgen</option>
+              <option value="Ken">Ken</option>
+            </select>
+            <button onclick="addTodoGeneral()">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="parade-rekwisieten">
+      <div class="card">
+        <div class="card-title">Rekwisieten — overzicht</div>
+        <div style="font-size:13px;line-height:1.9;">
+          <div class="todo-item"><div class="todo-text"><strong>Maskers</strong> — 960 stuks, 24 varianten (3 sekses × 3 maten × 2 leeftijden × 4 = ~40/variant). Workshops: 24/6, 23/8, 2/9. Uitvoering door participanten/vrijwilligers.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Neuzekes kar</strong> — gekocht exemplaar, wordt afgewerkt zoals Gents voorbeeld (Johan).</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Blauwe regen</strong> — schraal, zonder bloemen.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Palestina vlag</strong> — verhard in zijn vorm.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Bloembak op stoep</strong> — gecopieerd van Fonteineplein origineel.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Vlaggen (karavaan)</strong> — 3 vlaggen met wapenschild per gevel, seingeversfunctie. Samenwerking textielatelier Manoeuvre.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Slingers</strong> — ca. 50m lang. Rode Lotus: 20 stickmachines. Stofrestjes vanuit rekwisieten.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Auto (KIA Picanto)</strong> — transport vanuit TH. L3605 × B1595 mm, 920 kg leeg.</div></div>
+          <div class="todo-item"><div class="todo-text"><strong>Terrastafels (3) + stoelen (10)</strong> — voor de voorstelling NTGent.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ NT GENT ═══════════════════════════════ -->
+<div class="page" id="page-ntgent">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <p style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.5rem;">Pijler 2</p>
+      <h1>Voorstelling <span>NTGent</span></h1>
+      <p>Vanaf 29 oktober 2026. Regie & scenografie: Thomas Verstraeten. Muzikale leiding: Wouter Deltour. Opbouw: 19–21 oktober, première 29 oktober.</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('ntgent', 'info')">Info & planning</button>
+      <button class="tab-btn" onclick="showTab('ntgent', 'opbouw')">Opbouwvolgorde</button>
+      <button class="tab-btn" onclick="showTab('ntgent', 'todos-ntg')">To-do's</button>
+    </div>
+
+    <div class="tab-panel active" id="ntgent-info">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Kalender NTGent</div>
+          <div class="timeline" style="margin-top:0.5rem;">
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:10px;">19/10</div>
+              <div class="timeline-content">
+                <div class="timeline-date">19–21 oktober</div>
+                <div class="timeline-title">Opbouw NTGent</div>
+                <div class="timeline-desc">ma 19 – woe 21/10 (info Karel Clemminck)</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:10px;">22/10</div>
+              <div class="timeline-content">
+                <div class="timeline-date">22 oktober — voo/nmd TP</div>
+                <div class="timeline-title">Belichting + technische proef</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:10px;">27/10</div>
+              <div class="timeline-content">
+                <div class="timeline-date">27 oktober</div>
+                <div class="timeline-title">Voorgenerale (mid-av)</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:10px;">28/10</div>
+              <div class="timeline-content">
+                <div class="timeline-date">28 oktober</div>
+                <div class="timeline-title">Generale (av)</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-key" style="font-size:10px;">29/10</div>
+              <div class="timeline-content">
+                <div class="timeline-date">29 oktober 2026 — 20u</div>
+                <div class="timeline-title">🎭 Première</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:9px;">VO2-8</div>
+              <div class="timeline-content">
+                <div class="timeline-date">30/10 – 8/11</div>
+                <div class="timeline-title">Voorstellingen 2 t/m 8</div>
+                <div class="timeline-desc">vrij 30/10, za 31/10 (2×), di 3–6/11, za 7/11, zo 8/11</div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot dot-future" style="font-size:10px;">9/11</div>
+              <div class="timeline-content">
+                <div class="timeline-date">9–10 november</div>
+                <div class="timeline-title">Afbouw (NTGent-ploeg)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Technische info NTGent</div>
+          <table style="width:100%;font-size:13px;border-collapse:collapse;">
+            <tr><td style="padding:6px 0;color:var(--obv-muted);width:45%;border-bottom:1px solid var(--obv-border);">Contact NTGent</td><td style="border-bottom:1px solid var(--obv-border);"><a href="mailto:karel.clemminck@ntgent.be" style="color:var(--obv-brick);">Karel Clemminck</a></td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);border-bottom:1px solid var(--obv-border);">Toneelopstelling</td><td style="border-bottom:1px solid var(--obv-border);">Op hoac — beklimbaar (bouwstelling principe)</td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);border-bottom:1px solid var(--obv-border);">Vloer</td><td style="border-bottom:1px solid var(--obv-border);">Staal + multiplex 18mm + kasseien afwerking in hout/verf</td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);border-bottom:1px solid var(--obv-border);">Stage Dex</td><td style="border-bottom:1px solid var(--obv-border);">40 × 2×1m + 2 × 1×1m + 14 maatwerk 2×1m</td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);border-bottom:1px solid var(--obv-border);">Orkestbak</td><td style="border-bottom:1px solid var(--obv-border);">10 Hoac 2×1m + driehoekige maatwerk stukken. Voorkant: doek of plaat (TBC)</td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);border-bottom:1px solid var(--obv-border);">Draaicirkels</td><td style="border-bottom:1px solid var(--obv-border);">2 platforms (Vrijdagmarkt + Fonteineplein bodem)</td></tr>
+            <tr><td style="padding:6px 0;color:var(--obv-muted);">Contre-pente</td><td>OBV maakt contre-pente + uitvulling orkestbak (hoac)</td></tr>
+          </table>
+          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--obv-border);">
+            <div style="font-size:12px;color:var(--obv-muted);margin-bottom:0.5rem;font-weight:600;">Open vragen NTGent:</div>
+            <ul style="font-size:12px;padding-left:1.25rem;line-height:1.9;color:var(--obv-muted);">
+              <li>Cirkelsegment achteraan — ook voor NTGent?</li>
+              <li>Wanneer start achterconstructie?</li>
+              <li>Wanneer start vloer + straatbekleding?</li>
+              <li>Dakje Fonteineplein in NTGent?</li>
+              <li>Stockage NTGent op lift?</li>
+              <li>Scheiding materiaalpatroon vloer (separation TBC)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="ntgent-opbouw">
+      <div class="card">
+        <div class="card-title">Opbouwvolgorde — Lenny's en Kenny's Gevelgevoelens</div>
+        <p style="font-size:12px;color:var(--obv-muted);margin-bottom:1rem;">Opgesteld door Ken & Lennert — vergadering 18/05/2026</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--obv-brick);margin-bottom:0.75rem;">1. Contre-pente</div>
+            <ol style="font-size:13px;padding-left:1.25rem;line-height:1.9;">
+              <li>Aftekenen rotatiepunten + algemene posities van beide platformen</li>
+              <li>Opbouwen steunstructuur bovenste delen + kappen</li>
+              <li>Afstanden bepalen contre-pente</li>
+              <li>Opbouwen contre-pente</li>
+              <li>Opbouwen basis HOAC structuur met gewichtplaat + broodjes + voorzieningen voor steekbanden</li>
+              <li>Halve cirkel afwerkingsplaat vastmaken</li>
+              <li>Afwerkingsplaten op de Hoac</li>
+              <li>Zakken achterstructuren + steekbanden vastmaken in de vloer</li>
+            </ol>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--obv-blue);margin-bottom:0.75rem;">2. Historische gevel</div>
+            <ol style="font-size:13px;padding-left:1.25rem;line-height:1.9;">
+              <li>1ste deel: samenstellen op de grond → rechtwandelen langs achter → oppikken met motor → bevestigen op HOAC</li>
+              <li>3de deel oppikken met motor</li>
+              <li>2de deel eronder plaatsen → 3+2 samen op 1ste deel</li>
+              <li>5de deel samenstellen op grond → oppikken</li>
+              <li>4de deel eronder → 5+4 samen op 3de deel</li>
+              <li>Aparte stukken altijd vastmaken aan achterstructuur</li>
+            </ol>
+            <div style="font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--obv-green);margin-bottom:0.75rem;margin-top:1rem;">3. Arbeidersgevel</div>
+            <ol style="font-size:13px;padding-left:1.25rem;line-height:1.9;">
+              <li>2de deel oppikken + 1ste deel rechtwandelen</li>
+              <li>2de op 1ste bevestigen → samen op HOAC</li>
+              <li>3de deel op 2de zetten</li>
+              <li>5de + 4de samen → op 3de</li>
+              <li>6de deel (dak): rechtwandelen op verhoog → oppikken → op deel 5</li>
+            </ol>
+          </div>
+        </div>
+        <div style="margin-top:1rem;padding:1rem;background:var(--obv-warm);border-radius:var(--radius);font-size:13px;">
+          <strong style="color:var(--obv-brick);">⚠️ Probleem / oplossing:</strong> Vastmaken verstevigingslatten in de hoogte — van de grond te lang voor motoren. <strong>Oplossing:</strong> laatste deel optrekken tot werkhoogte hoogste punt achterbouw en dan bevestigen.
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="ntgent-todos-ntg">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">To-do's Bert — NTGent</div>
+          <div id="todos-bert-ntg"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw item Bert NTG..." id="todo-input-bert-ntg">
+            <button onclick="addTodo('bert-ntg')">+</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">To-do's PT — NTGent (Ken/Lennert)</div>
+          <div id="todos-pt-ntg"></div>
+          <div class="todo-add">
+            <input type="text" placeholder="Nieuw item PT NTG..." id="todo-input-pt-ntg">
+            <button onclick="addTodo('pt-ntg')">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ VERSLAGEN ═══════════════════════════════ -->
+<div class="page" id="page-verslagen">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h1>Vergader<span>verslagen</span></h1>
+      <p>Alle verslagen van het technisch kernteam en andere overlegmomenten.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Technisch kernteam #8 — maandag 18 mei 2026</span>
+        <span class="meeting-header-date">Zele — Bert, Jurgen, Dimi, Roel, Lennert, Tom, Ken ▼</span>
+      </div>
+      <div class="meeting-body open">
+        <p><strong>Vergadering Heli:</strong></p>
+        <ul>
+          <li>Oefen terrein verder verwijderen van laad en los</li>
+          <li>Ophalen cherry pickers verplaatsen naar woensdag 02/09 (reserve dag + eerste voorbereidingsweek Bas op locatie)</li>
+          <li>Rijplaten Fonteineplein: stad Gent of wij? → belangrijk voor planning</li>
+          <li>Eerste opbouwdag ter plaatse: 9u–21u voor de zekerheid</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>Algemeen:</strong></p>
+        <ul>
+          <li>Hekken rond trailers 's nachts? Nachtwaker?</li>
+          <li>Laatste veiligheidscontrole: Stad Gent of intern?</li>
+          <li>Hoac aanvragen bij Gino voor augustus</li>
+          <li>Gewicht voorzien voor testopbouw + kegels en stokken voor oefenterrein</li>
+          <li>Laatste 2 weken seizoen: alle hoeken uitzetten op terrein met buren</li>
+          <li>Afspreken op locatie met plannen — voorstel 5 juni 11u</li>
+          <li>Plantenbakken Vrijdagsmarkt verplaatsen? Hoe? Met wat?</li>
+          <li>Eerst checken gebruik kleine kraan voor 21/05 — anders Prolyte voor olifant</li>
+          <li>Prolyte de vraag stellen voor bouwolifant + eerste ontwerp</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>Notes Lennert/Ken (Gevelgevoelens):</strong> Hoac bij Gino checken (8 × 1m²). Prolyte als kraan no-go. Te verzamelen materiaal checken.</p>
+      </div>
+    </div>
+
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Thomas Verstraeten meeting — 30 april 2026</span>
+        <span class="meeting-header-date">Zele — Thomas, Bert, Robert, Veerle, Azura, Sofie, Jurgen, Johan, Bas ▼</span>
+      </div>
+      <div class="meeting-body">
+        <p><strong>Rekwisieten:</strong></p>
+        <ul>
+          <li>Neuzekes kar: gekocht exemplaar wordt afgewerkt zoals voorbeeld Gent</li>
+          <li>Blauwe regen (schraal, zonder bloemen), Palestina vlag (verhard)</li>
+          <li>Maskers: 3 Sekses (M/V/X) × 3 Maten × 2 Leeftijden = 24 varianten, 40 stuks elk = 960 maskers. Uitvoering Ricoh Zele</li>
+          <li>Workshops: #1 Fonteineplein 24/6 15u–18u, #2 zo 23/8 14u–18u, #3 woe 2/9 14u–18u</li>
+          <li>Els Petrus als stagiair (pas vanaf augustus)</li>
+          <li>IT OBV aanspreken voor verzamelen foto's maskers (methode) — Sophie zet foto's direct in lijst</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>Decor:</strong></p>
+        <ul>
+          <li>Dakje Fonteineplein: bevestigd op dieplader aan gevel. Opgebouwd op Vrijdagmarkt bovenop dakgoot FP, gekanteld + bevestigd</li>
+          <li>Spiegel idee: polycarbonaat spiegel op licht frame</li>
+          <li>Achterkant constructie blijft ongeschilderd</li>
+        </ul>
+        <p style="margin-top:0.75rem;"><strong>Transport scenario:</strong></p>
+        <ul>
+          <li>Gevels beide gericht naar Justitiepaleis — positionering en manoeuvres onderzoeken</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Technisch kernteam #6 — 9 april 2026</span>
+        <span class="meeting-header-date">Zele — Bert, Tom, Dimitri, Ken, Lennert, Roel, Bas ▼</span>
+      </div>
+      <div class="meeting-body">
+        <ul>
+          <li>Opbouwvolgorde Ken: bouwen vooraan met Gini en/of via achterstructuur</li>
+          <li>Type Gini (zonder poten) navragen bij NTGent</li>
+          <li>Bevestiging tussenstijl hoac: boren of 1m hoac gebruiken</li>
+          <li>Retouchetijd voorzien na opbouw vooraleer vloer vooraan dicht leggen</li>
+          <li>Meeting Pieter Pollemans: totaalgewicht, tegengewicht, belastbaarheid, afstempeling dessous, gewicht per wiel</li>
+          <li>Thomas: dringend uitsluitsel over dakje Fonteineplein en spiegel VM</li>
+          <li>Teamsamenstelling voorbereiden → <strong>donderdag 23/4 10:00</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Technisch kernteam #5 — 2 april 2026</span>
+        <span class="meeting-header-date">Zele — Voltallig kernteam ▼</span>
+      </div>
+      <div class="meeting-body">
+        <p><strong>Rekwisieten:</strong> Geen paard (offerte €30.000). Mogelijk houten paard als alternatief.</p>
+        <p style="margin-top:0.5rem;"><strong>Decor + PT - De Karavaan:</strong></p>
+        <ul>
+          <li>NTGent maakt enkel contre-pente + opvulling orkestbak (hoac van ons)</li>
+          <li>Exacte lengte dieplader bepalen bij De Vreese — hoac bouwen op deze afmeting</li>
+          <li>Proefopbouw NTGent: achterconstructie ook voor proefbouw voorzien</li>
+        </ul>
+        <p style="margin-top:0.5rem;"><strong>De Opera - NTGent:</strong></p>
+        <ul>
+          <li>Knelgevaar bij draaien gevel: uitsparing in vloer</li>
+          <li>Pennen omgekeerd — op bovenste steekbanden ingelast</li>
+          <li>Voorste contre-pente vloer pas bouwen op einde</li>
+        </ul>
+        <p style="margin-top:0.5rem;"><strong>Drive links vergadering:</strong> <a href="https://drive.google.com/file/d/1FKOMdw4LPOQDLcWH9WhzgDC5aZg2ZeAu/view?usp=drive_link" target="_blank" class="btn-link">Update 2 april PDF</a></p>
+      </div>
+    </div>
+
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Technisch kernteam #3 — 14 november 2025</span>
+        <span class="meeting-header-date">Zele — Bert, Jurgen, Tom, Guy, Dimitri, Ken, Lennert ▼</span>
+      </div>
+      <div class="meeting-body">
+        <ul>
+          <li>Ingenieurs ideeën: kantelsysteem, verticale versteviging</li>
+          <li>Draaiende stellingsklemmen geven teveel beweging — vraag doorgestuurd aan Pieter</li>
+          <li><strong>TOURING!</strong> Dit plannen als tourproductie voor meer tijd en flexibiliteit</li>
+          <li>Locatiebezoek eind jan café Congé</li>
+          <li>Iedereen verzamelt "shitlist" → Dimitri</li>
+          <li>Dimitri verzamelt materialenlijst voor opbouw</li>
+          <li>Te huren materieel wordt opgelijst ifv planning</li>
+          <li>Hijspunten voor NTGent te bepalen</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="meeting-section">
+      <div class="meeting-header" onclick="toggleMeeting(this)">
+        <span class="meeting-header-title">Technisch kernteam opstart #1 — 21 augustus 2025</span>
+        <span class="meeting-header-date">Zele — Bert, Jurgen, Tom, Dimitri, Guy ▼</span>
+      </div>
+      <div class="meeting-body">
+        <ul>
+          <li>Bert: zowel TPL als TO op dit project t.e.m. voorstellingen NTGent</li>
+          <li>Min. 2 dagen opbouw vooraf: draagstructuur + opbouw gevels</li>
+          <li>Bezorgdheid opbouw wissellocatie 's avonds — beter dag nadien (zondag)</li>
+          <li>Historische gevel: 3 verticale frames + horiz. frame midden + 3 top frames = 9 delen</li>
+          <li>Afbouw gevels met publiek (beiden tegelijk) in 3 delen + kantelen + samenvoegen op dieplader</li>
+          <li>Parade begeleid door 404</li>
+          <li>2 brigadiers + 2 toneelmeesters zo snel mogelijk bepalen</li>
+          <li>Communicatie NTGent wordt opgestart</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Upload nieuw verslag -->
+    <div style="margin-top:2rem;">
+      <div class="section-header"><span class="section-label">Nieuw verslag toevoegen</span></div>
+      <div class="card">
+        <div style="display:grid;gap:0.75rem;">
+          <input type="text" placeholder="Titel vergadering (bv. Technisch kernteam #9 — 27 mei 2026)" style="padding:10px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;" id="verslag-titel">
+          <div style="display:flex;gap:0.75rem;">
+            <input type="text" placeholder="Datum (bv. 27/05/2026)" style="flex:1;padding:10px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;" id="verslag-datum">
+            <input type="text" placeholder="Drive-link (optioneel)" style="flex:2;padding:10px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;" id="verslag-link">
+          </div>
+          <textarea placeholder="Samenvatting van het verslag, beslissingen, actiepunten..." style="min-height:150px;padding:10px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;resize:vertical;line-height:1.6;" id="verslag-inhoud"></textarea>
+          <button class="btn-primary" onclick="addVerslag()" style="width:auto;align-self:flex-start;padding:10px 24px;">Verslag opslaan</button>
+        </div>
+      </div>
+      <div id="nieuwe-verslagen"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PLANNING ═══════════════════════════════ -->
+<div class="page" id="page-planning">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h1>Productie<span>planning</span></h1>
+      <p>Overzicht van alle mijlpalen en deelplanningen. Seizoen 2026–2027.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="grid-2">
+      <div>
+        <div class="section-label" style="margin-bottom:0.75rem;">Grote lijn</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="background:var(--obv-dark);color:#f5f0e8;">
+                <th style="padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Datum</th>
+                <th style="padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Mijlpaal</th>
+                <th style="padding:10px 14px;text-align:left;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="planning-table">
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">01/09/2025</td><td style="padding:9px 14px;">Start aanmaak decoratelier</td><td style="padding:9px 14px;"><span class="badge badge-done">✓ Gedaan</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">14/01/2026</td><td style="padding:9px 14px;">Final design parade + voorstelling</td><td style="padding:9px 14px;"><span class="badge badge-done">✓ Gedaan</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">10/02/2026</td><td style="padding:9px 14px;">Proefbouw NTGent</td><td style="padding:9px 14px;"><span class="badge badge-done">✓ Gedaan</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Week 23</td><td style="padding:9px 14px;">Opmeten locaties Gent</td><td style="padding:9px 14px;"><span class="badge badge-todo">→ Binnenkort</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Week 24</td><td style="padding:9px 14px;">Uitzetten locatie Zele</td><td style="padding:9px 14px;"><span class="badge badge-todo">→ Gepland</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Week 25</td><td style="padding:9px 14px;">Afwerking / patine / rechtzetten</td><td style="padding:9px 14px;"><span class="badge badge-todo">→ Gepland</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Week 26</td><td style="padding:9px 14px;">Einde seizoen — alles afgewerkt Zele</td><td style="padding:9px 14px;"><span class="badge badge-todo">→ Gepland</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Week 27</td><td style="padding:9px 14px;">Bokken opzetten + diepladers Zele</td><td style="padding:9px 14px;"><span class="badge badge-todo">→ Gepland</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">Kraantje 26/6–10/7</td><td style="padding:9px 14px;">Kraanperiode Zele</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Reserveren</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);background:#fdf8f4;"><td style="padding:9px 14px;color:var(--obv-muted);">17/08/2026</td><td style="padding:9px 14px;font-weight:600;">Start proefopbouw Zele (week 34)</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">11/09/2026</td><td style="padding:9px 14px;">Aankomst materieel + aftakelen</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);background:#fdf8f4;"><td style="padding:9px 14px;color:var(--obv-brick);font-weight:700;">12/09/2026</td><td style="padding:9px 14px;font-weight:700;">🎭 PARADE VAN GEVELS</td><td style="padding:9px 14px;"><span class="badge badge-urgent">Hoofdevenement</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">28/9–2/10</td><td style="padding:9px 14px;">Afbouw gevels + transport Zele (week 36)</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">19–21/10/2026</td><td style="padding:9px 14px;">Opbouw NTGent</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">27–28/10</td><td style="padding:9px 14px;">Voorgenerale + Generale</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);background:#fdf8f4;"><td style="padding:9px 14px;color:var(--obv-blue);font-weight:700;">29/10/2026</td><td style="padding:9px 14px;font-weight:700;">🎭 PREMIÈRE NTGent 20u</td><td style="padding:9px 14px;"><span class="badge badge-ntgent">Hoofdevenement</span></td></tr>
+              <tr style="border-bottom:1px solid var(--obv-border);"><td style="padding:9px 14px;color:var(--obv-muted);">30/10–8/11</td><td style="padding:9px 14px;">Voorstellingen 2 t/m 8</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+              <tr><td style="padding:9px 14px;color:var(--obv-muted);">9–10/11/2026</td><td style="padding:9px 14px;">Afbouw NTGent</td><td style="padding:9px 14px;"><span class="badge badge-info">📌 Vast</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" style="margin-bottom:0.75rem;">Drive links</div>
+        <div class="card">
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-sheet">📊</div>
+            <div class="doc-info">
+              <div class="doc-name">Planning materieel-personeel</div>
+              <div class="doc-meta">Google Sheets — Heli planning + week 34+</div>
+            </div>
+            <a href="https://docs.google.com/spreadsheets/d/1if-aoNV8_BrnZwgqlvjI7aVwWFvnjNnYCHBcf6NLpiU/edit?usp=sharing" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-pdf">📄</div>
+            <div class="doc-info">
+              <div class="doc-name">Update 2 april 2026</div>
+              <div class="doc-meta">PDF — GEP/GEV presentatie met plannen</div>
+            </div>
+            <a href="https://drive.google.com/file/d/1FKOMdw4LPOQDLcWH9WhzgDC5aZg2ZeAu/view?usp=drive_link" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-doc">📝</div>
+            <div class="doc-info">
+              <div class="doc-name">LOG Technisch Kernteam</div>
+              <div class="doc-meta">Google Doc — alle verslagen</div>
+            </div>
+            <a href="https://docs.google.com/document/d/1NbdFhFhVZAMcww0r5hGrNNlyhq6lrdzObyBhdEl3ZQY/edit?usp=drive_link" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-plan">📐</div>
+            <div class="doc-info">
+              <div class="doc-name">Research Plans</div>
+              <div class="doc-meta">Drive map — technische plannen</div>
+            </div>
+            <a href="https://drive.google.com/drive/folders/1skOf0VdGW2R4ybkVEJzeKl56Ahoy5rM8?usp=drive_link" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-plan">🖼</div>
+            <div class="doc-info">
+              <div class="doc-name">Foto's</div>
+              <div class="doc-meta">Drive map — projectfoto's</div>
+            </div>
+            <a href="https://drive.google.com/drive/folders/1NL8vBvTzcS_U4qSUieNTqGPO7bzSylYt?usp=drive_link" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-doc">📋</div>
+            <div class="doc-info">
+              <div class="doc-name">Conceptnota Gevelproject</div>
+              <div class="doc-meta">Google Doc</div>
+            </div>
+            <a href="https://docs.google.com/document/d/1hbCfOHrJyxTlTfa4QywXCCX79OaTwIv2TvJPwG-RJes/edit?usp=sharing" target="_blank" class="doc-link">Openen</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-doc">🎨</div>
+            <div class="doc-info">
+              <div class="doc-name">Ontwerppresentatie Parade</div>
+              <div class="doc-meta">Google Slides</div>
+            </div>
+            <a href="https://docs.google.com/presentation/d/1j-LathzB02Tt0fn9pAzUA-8fWmmafSSpyG-rtb85NWg/edit?usp=sharing" target="_blank" class="doc-link">Openen</a>
+          </div>
+        </div>
+
+        <div class="section-label" style="margin-bottom:0.75rem;margin-top:1.5rem;">Mijlpaal toevoegen</div>
+        <div class="card">
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <input type="text" placeholder="Datum (bv. 05/06/2026)" style="padding:8px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;" id="plan-datum">
+            <input type="text" placeholder="Beschrijving mijlpaal" style="padding:8px 12px;border:1px solid var(--obv-border-strong);border-radius:var(--radius);font-size:13px;font-family:'Inter',sans-serif;background:var(--obv-cream);color:var(--obv-text);outline:none;" id="plan-desc">
+            <button class="btn-primary" onclick="addMijlpaal()" style="align-self:flex-start;">Toevoegen aan planning</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ DOCUMENTEN ═══════════════════════════════ -->
+<div class="page" id="page-documenten">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h1>Documenten<span> & plannen</span></h1>
+      <p>Upload bestanden + plak de Drive-link erbij. Één centrale plek voor alle projectdocumenten.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="grid-2">
+      <div>
+        <div class="section-label" style="margin-bottom:0.75rem;">Document toevoegen</div>
+        <div class="card">
+          <label class="upload-zone" for="file-upload">
+            <input type="file" id="file-upload" onchange="handleFileUpload(this)">
+            <div class="upload-icon">📂</div>
+            <h3>Sleep een bestand hierheen</h3>
+            <p>of klik om te bladeren — PDF, Word, Excel, ...</p>
+          </label>
+          <div class="doc-form">
+            <input type="text" placeholder="Documentnaam / beschrijving" id="doc-naam" style="grid-column:1/-1;">
+            <input type="text" placeholder="Drive-link (https://...)" id="doc-link" style="grid-column:1/-1;">
+            <select id="doc-categorie">
+              <option value="">Categorie...</option>
+              <option value="plan">Technisch plan</option>
+              <option value="verslag">Verslag</option>
+              <option value="planning">Planning</option>
+              <option value="contract">Contract</option>
+              <option value="foto">Foto / visualisatie</option>
+              <option value="overig">Overig</option>
+            </select>
+            <select id="doc-pijler">
+              <option value="">Pijler...</option>
+              <option value="parade">Parade</option>
+              <option value="ntgent">NT Gent</option>
+              <option value="beide">Beide</option>
+            </select>
+            <button class="doc-submit" onclick="addDocument()">Document opslaan</button>
+          </div>
+          <div id="upload-status" style="font-size:12px;color:var(--obv-green);margin-top:0.5rem;display:none;">✓ Bestand geselecteerd</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" style="margin-bottom:0.75rem;">Opgeslagen documenten</div>
+        <div class="card" id="doc-list">
+          <div style="font-size:12px;color:var(--obv-muted);text-align:center;padding:1rem 0;">
+            Nog geen documenten toegevoegd via de app.<br>Gebruik het formulier links om documenten toe te voegen.
+          </div>
+        </div>
+        <div class="section-label" style="margin-bottom:0.75rem;margin-top:1rem;">Drive — bestaande mappen</div>
+        <div class="card">
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-plan">📐</div>
+            <div class="doc-info"><div class="doc-name">Research Plans</div><div class="doc-meta">Alle technische plannen en tekeningen</div></div>
+            <a href="https://drive.google.com/drive/folders/1skOf0VdGW2R4ybkVEJzeKl56Ahoy5rM8?usp=drive_link" target="_blank" class="doc-link">Drive</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-plan">🖼</div>
+            <div class="doc-info"><div class="doc-name">Foto's GEP/GEV</div><div class="doc-meta">Projectfoto's en referentiebeelden</div></div>
+            <a href="https://drive.google.com/drive/folders/1NL8vBvTzcS_U4qSUieNTqGPO7bzSylYt?usp=drive_link" target="_blank" class="doc-link">Drive</a>
+          </div>
+          <div class="doc-item">
+            <div class="doc-icon doc-icon-doc">📋</div>
+            <div class="doc-info"><div class="doc-name">Final Design doc</div><div class="doc-meta">2627GEP/GEV — eindontwerp</div></div>
+            <a href="https://docs.google.com/document/d/1E0WzDwYCySXGIE32ue_xfnrIRGaqqoq1pCf8QhUIb2I/edit?usp=sharing" target="_blank" class="doc-link">Drive</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TEAM ═══════════════════════════════ -->
+<div class="page" id="page-team">
+  <div class="page-hero">
+    <div style="max-width:1200px;margin:0 auto;">
+      <h1>Technisch <span>Team</span></h1>
+      <p>Kernteam en contacten voor het Gevelproject. Producer: Wietse Bovri.</p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="section-label" style="margin-bottom:0.75rem;">Technisch kernteam</div>
+    <div class="grid-3" style="margin-bottom:1.5rem;">
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#fde8e8;color:#8b1a1a;">BS</div>
+          <div>
+            <div class="contact-name">Bert Serneels</div>
+            <div class="contact-role">TPL + TO</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-brick);margin-top:0.75rem;">Planning & Technisch Overzicht</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#e2edf8;color:#1a3d6b;">KV</div>
+          <div>
+            <div class="contact-name">Ken</div>
+            <div class="contact-role">Podiumtechniek</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-blue);margin-top:0.75rem;">Podiumtechniek</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#e2edf8;color:#1a3d6b;">LD</div>
+          <div>
+            <div class="contact-name">Lennert</div>
+            <div class="contact-role">Podiumtechniek</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-blue);margin-top:0.75rem;">Podiumtechniek</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#e8f5e8;color:#1a5c1a;">JB</div>
+          <div>
+            <div class="contact-name">Jurgen Baert</div>
+            <div class="contact-role">Hoofd Decoratelier</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-green);margin-top:0.75rem;">Decoratelier</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#e8f5e8;color:#1a5c1a;">DV</div>
+          <div>
+            <div class="contact-name">Dimitri</div>
+            <div class="contact-role">Decoratelier</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-green);margin-top:0.75rem;">Decoratelier</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#f3e8f5;color:#5a1a6b;">TV</div>
+          <div>
+            <div class="contact-name">Thomas Verstraeten</div>
+            <div class="contact-role">Regie & Scenografie</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-muted);margin-top:0.75rem;">Artistieke leiding</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#faeeda;color:#854f0b;">WB</div>
+          <div>
+            <div class="contact-name">Wietse Bovri</div>
+            <div class="contact-role">Producer</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-muted);margin-top:0.75rem;">Productie</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#fde8e8;color:#8b1a1a;">GH</div>
+          <div>
+            <div class="contact-name">Gunther</div>
+            <div class="contact-role">AVLX</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-muted);margin-top:0.75rem;">Audio / Video / Licht / Xtra</div>
+      </div>
+      <div class="contact-card">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div class="contact-avatar" style="background:#fde8e8;color:#8b1a1a;">RM</div>
+          <div>
+            <div class="contact-name">Roel / Maarten</div>
+            <div class="contact-role">Toneelmeester</div>
+          </div>
+        </div>
+        <div class="contact-dept" style="color:var(--obv-muted);margin-top:0.75rem;">Toneelmeesters</div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:0.75rem;">Partners & externen</div>
+    <div class="grid-3">
+      <div class="contact-card">
+        <div class="contact-name">NTGent</div>
+        <div class="contact-role" style="margin-bottom:0.5rem;">Venue voorstelling</div>
+        <div style="font-size:12px;color:var(--obv-muted);">Contact: Karel Clemminck</div>
+        <div style="margin-top:0.5rem;"><a href="mailto:karel.clemminck@ntgent.be" class="btn-link">Mail</a></div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-name">Pieter Pollemans</div>
+        <div class="contact-role" style="margin-bottom:0.5rem;">Ingenieur / Constructie</div>
+        <div style="font-size:12px;color:var(--obv-muted);">Stabiliteit & berekeningen gevels</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-name">De Vreese Transport</div>
+        <div class="contact-role" style="margin-bottom:0.5rem;">Transporteur diepladers</div>
+        <div style="margin-top:0.5rem;"><a href="https://www.devreesetransport.be/nl/transport-met-dieplader" target="_blank" class="btn-link">Website</a></div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-name">Robert Abad Capilla</div>
+        <div class="contact-role">TO / Tekeningen</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-name">Fabian Luyten</div>
+        <div class="contact-role">Tekeningen NTGent</div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-name">Partners</div>
+        <div class="contact-role" style="margin-bottom:0.5rem;">404, Campo, Kopergietery</div>
+        <div style="font-size:12px;color:var(--obv-muted);">Gent Festival (mogelijk OdeGand)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  2627 GEP/GEV — Het Gevelproject — Opera Ballet Vlaanderen × NTGent × Thomas Verstraeten<br>
+  Intern werkdocument — Kenny & Lennert — <span id="footer-date"></span>
+</footer>
+
+<script>
+const today = new Date();
+document.getElementById('live-date').textContent = today.toLocaleDateString('nl-BE', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+document.getElementById('footer-date').textContent = today.toLocaleDateString('nl-BE', {day:'numeric', month:'long', year:'numeric'});
+
+const parade = new Date('2026-09-12');
+const premiere = new Date('2026-10-29');
+const daysParade = Math.ceil((parade - today) / 86400000);
+const daysPremiere = Math.ceil((premiere - today) / 86400000);
+document.getElementById('countdown-parade').textContent = daysParade;
+document.getElementById('countdown-premiere').textContent = daysPremiere;
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function showTab(page, tab) {
+  const panels = document.querySelectorAll(`#page-${page} .tab-panel`);
+  const btns = document.querySelectorAll(`#page-${page} .tab-btn`);
+  panels.forEach(p => p.classList.remove('active'));
+  btns.forEach(b => b.classList.remove('active'));
+  document.getElementById(`${page}-${tab}`).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function toggleMeeting(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+const todosData = {
+  bert: [
+    {text: 'Afspraak Heli — gedaan', done: true},
+    {text: 'Plan proefbouw parking Zele — gedaan', done: true},
+    {text: 'Overige plannen bekleding FP', done: false},
+    {text: 'Dakje FP + spiegel VM (Thomas?)', done: false},
+    {text: 'Bepalingen ingenieur / protocol', done: false},
+    {text: 'SIF voorstellingen NTG + veiligheidsdossier', done: false},
+    {text: 'Bouwboek + opbouwplanning', done: false},
+    {text: 'Overzicht richting dieplader — scenario', done: false},
+    {text: 'Check optie/prijs minikraan Zele voor donderdag 22/5', done: false},
+    {text: 'Dieplader reserveren week 27 bij De Vreese', done: false},
+  ],
+  pt: [
+    {text: 'Start bokconstructie — prototype', done: false},
+    {text: 'Start hoac set-up', done: false},
+    {text: 'Mammoet/kraan voor vroege proefbouw?', done: false},
+    {text: 'Opbouw proefbouw tegengewicht voorzien', done: false},
+    {text: 'Olifant/mammoet prolyte bouwen (1ste week juli)', done: false},
+    {text: 'Berekening / info vragen bij Prolyte', done: false},
+    {text: 'Week 25: uitzetten op parking', done: false},
+  ],
+  deco: [
+    {text: 'Toestemming terrein Zele van gebuur', done: false},
+    {text: 'Start Fonteineplein — wat precies nog nodig?', done: false},
+    {text: 'Testen: lijmen/plakken roofing op triplex (gewicht?)', done: false},
+    {text: 'Spuitbussen rood + blauw voor proefbouw', done: false},
+  ],
+  algemeen: [],
+  'bert-ntg': [
+    {text: 'DWG 2D bezorgen aan Ken Hioco', done: false},
+    {text: 'Plan contre-pente bezorgen aan NTGent begin juni', done: false},
+    {text: 'Ingenieur verslag samen overlopen', done: false},
+  ],
+  'pt-ntg': [
+    {text: 'Ploegsamenstelling bepalen', done: false},
+    {text: 'Inplantingsplan maken', done: false},
+    {text: 'Opbouwvolgorde finaliseren', done: false},
+    {text: 'Veiligheidsplan opstellen', done: false},
+    {text: 'Afspreken met NTGent', done: false},
+  ],
+};
+
+function renderTodos(key) {
+  const container = document.getElementById('todos-' + key);
+  if (!container) return;
+  container.innerHTML = todosData[key].map((t, i) => `
+    <div class="todo-item">
+      <div class="todo-check ${t.done ? 'checked' : ''}" onclick="toggleTodo('${key}', ${i})">
+        ${t.done ? '✓' : ''}
+      </div>
+      <span class="todo-text ${t.done ? 'checked-text' : ''}">${t.text}</span>
+    </div>
+  `).join('');
+}
+
+function toggleTodo(key, i) {
+  todosData[key][i].done = !todosData[key][i].done;
+  renderTodos(key);
+  saveTodos();
+}
+
+function addTodo(key) {
+  const input = document.getElementById('todo-input-' + key);
+  if (!input || !input.value.trim()) return;
+  todosData[key].push({text: input.value.trim(), done: false});
+  input.value = '';
+  renderTodos(key);
+  saveTodos();
+}
+
+function addTodoGeneral() {
+  const input = document.getElementById('todo-input-algemeen');
+  const person = document.getElementById('todo-person-algemeen');
+  if (!input.value.trim()) return;
+  const text = person.value ? `[${person.value}] ${input.value.trim()}` : input.value.trim();
+  todosData.algemeen.push({text, done: false});
+  input.value = '';
+  renderTodos('algemeen');
+  saveTodos();
+}
+
+function saveTodos() {
+  try { localStorage.setItem('gev-todos', JSON.stringify(todosData)); } catch(e) {}
+}
+function loadTodos() {
+  try {
+    const saved = localStorage.getItem('gev-todos');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.keys(data).forEach(k => { if (todosData[k] !== undefined) todosData[k] = data[k]; });
+    }
+  } catch(e) {}
+}
+
+const notesData = [];
+
+async function addNote() {
+  const author = document.getElementById('note-author').value;
+  const title = document.getElementById('note-title').value.trim();
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) return;
+  const note = {id: Date.now(), author, title, text, date: new Date().toLocaleDateString('nl-BE'), processing: true, extracted: null};
+  notesData.unshift(note);
+  document.getElementById('note-title').value = '';
+  document.getElementById('note-text').value = '';
+  renderNotes();
+  await claudeExtract('note', note, text, author);
+}
+
+function deleteNote(id) {
+  const i = notesData.findIndex(n => n.id === id);
+  if (i > -1) { notesData.splice(i, 1); renderNotes(); }
+}
+
+function renderNotes() {
+  const list = document.getElementById('notes-list');
+  if (!notesData.length) { list.innerHTML = ''; return; }
+  list.innerHTML = notesData.map(n => `
+    <div class="note-item" style="position:relative;">
+      <div class="note-header">
+        <span class="note-author">${n.author}${n.title ? ' — ' + n.title : ''}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="note-date">${n.date}</span>
+          <button onclick="deleteNote(${n.id})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--obv-muted);padding:0;line-height:1;" title="Verwijderen">✕</button>
+        </div>
+      </div>
+      <div class="note-text">${n.text.replace(/\n/g, '<br>')}</div>
+      ${n.processing ? `<div style="margin-top:0.5rem;font-size:11px;color:var(--obv-muted);font-style:italic;">⏳ Claude analyseert deze notitie...</div>` : ''}
+      ${n.extracted && !n.processing ? renderExtracted(n.extracted) : ''}
+    </div>
+  `).join('');
+}
+
+function renderExtracted(ext) {
+  if (!ext || (!ext.todos?.length && !ext.mijlpalen?.length && !ext.vragen?.length)) return '';
+  let html = `<div style="margin-top:0.75rem;padding:0.75rem;background:var(--obv-warm);border-radius:var(--radius);font-size:12px;">
+    <div style="font-weight:700;font-family:'Syne',sans-serif;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--obv-brick);margin-bottom:0.5rem;">✨ Automatisch verwerkt door Claude</div>`;
+  if (ext.todos?.length) html += `<div style="margin-bottom:0.4rem;"><strong>To-do's toegevoegd:</strong> ${ext.todos.map(t => `<span style="background:white;border-radius:3px;padding:1px 6px;margin-left:4px;">${t.person ? '['+t.person+'] ' : ''}${t.text}</span>`).join('')}</div>`;
+  if (ext.mijlpalen?.length) html += `<div style="margin-bottom:0.4rem;"><strong>Planning bijgewerkt:</strong> ${ext.mijlpalen.map(m => `<span style="background:white;border-radius:3px;padding:1px 6px;margin-left:4px;">${m.datum}: ${m.beschrijving}</span>`).join('')}</div>`;
+  if (ext.vragen?.length) html += `<div><strong>Open vragen:</strong> ${ext.vragen.map(v => `<span style="background:white;border-radius:3px;padding:1px 6px;margin-left:4px;">${v}</span>`).join('')}</div>`;
+  if (ext.samenvatting) html += `<div style="margin-top:0.4rem;color:var(--obv-muted);font-style:italic;">${ext.samenvatting}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+const verslagenData = [];
+
+async function addVerslag() {
+  const titel = document.getElementById('verslag-titel').value.trim();
+  const datum = document.getElementById('verslag-datum').value.trim();
+  const link = document.getElementById('verslag-link').value.trim();
+  const inhoud = document.getElementById('verslag-inhoud').value.trim();
+  if (!titel || !inhoud) return;
+  const v = {id: Date.now(), titel, datum, link, inhoud, processing: true, extracted: null};
+  verslagenData.unshift(v);
+  document.getElementById('verslag-titel').value = '';
+  document.getElementById('verslag-datum').value = '';
+  document.getElementById('verslag-link').value = '';
+  document.getElementById('verslag-inhoud').value = '';
+  renderVerslagen();
+  await claudeExtract('verslag', v, inhoud, titel);
+}
+
+function deleteVerslag(id) {
+  const i = verslagenData.findIndex(v => v.id === id);
+  if (i > -1) { verslagenData.splice(i, 1); renderVerslagen(); }
+}
+
+function renderVerslagen() {
+  const container = document.getElementById('nieuwe-verslagen');
+  if (!verslagenData.length) { container.innerHTML = ''; return; }
+  container.innerHTML = verslagenData.map(v => `
+    <div class="meeting-section" style="margin-top:1rem;">
+      <div class="meeting-header" style="cursor:default;">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;" onclick="toggleMeeting(this.closest('.meeting-section').querySelector('.meeting-header'))">
+          <span class="meeting-header-title" style="cursor:pointer;">${v.titel}</span>
+          <span class="meeting-header-date">${v.datum} ▼</span>
+        </div>
+        <button onclick="deleteVerslag(${v.id})" style="background:rgba(255,255,255,0.15);border:none;cursor:pointer;font-size:12px;color:rgba(245,240,232,0.6);padding:3px 8px;border-radius:4px;margin-left:auto;white-space:nowrap;" title="Verwijderen">✕ Verwijderen</button>
+      </div>
+      <div class="meeting-body open">
+        <p style="white-space:pre-line;">${v.inhoud}</p>
+        ${v.link ? `<div style="margin-top:0.75rem;"><a href="${v.link}" target="_blank" class="btn-link">📎 Document openen</a></div>` : ''}
+        ${v.processing ? `<div style="margin-top:0.75rem;font-size:11px;color:var(--obv-muted);font-style:italic;">⏳ Claude analyseert dit verslag...</div>` : ''}
+        ${v.extracted && !v.processing ? renderExtracted(v.extracted) : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function claudeExtract(type, item, content, context) {
+  const projectContext = `
+Je bent de slimme kern van een productietool voor "Het Gevelproject" van Opera Ballet Vlaanderen.
+Project: Twee Gentse gevels wisselen van plek in een parade op 12/09/2026, daarna voorstelling in NTGent vanaf 29/10/2026.
+Kernteam: Bert (TPL/TO), Ken (PT), Lennert (PT), Jurgen (decoratelier), Dimitri (decoratelier), Roel/Maarten (toneelmeesters), Gunther (AVLX), Wietse (producer), Thomas Verstraeten (regie).
+Gebruikers van deze app: Kenny en Lennert.
+`;
+
+  const prompt = `${projectContext}
+
+Analyseer de volgende ${type === 'verslag' ? 'vergadernotities/verslag' : 'notitie'} en extraheer gestructureerde informatie.
+
+${type === 'verslag' ? 'Vergadering: ' + context : 'Auteur: ' + context}
+Inhoud:
+"${content}"
+
+Geef ALLEEN een JSON-object terug, geen markdown backticks, geen uitleg. Formaat:
+{
+  "todos": [{"text": "...", "person": "Bert|Ken|Lennert|Jurgen|Dimitri|Allen|null"}],
+  "mijlpalen": [{"datum": "DD/MM/JJJJ of 'Week XX'", "beschrijving": "..."}],
+  "vragen": ["open vraag 1", "open vraag 2"],
+  "samenvatting": "1-2 zinnen kernboodschap"
+}
+
+Regels:
+- Extraheer alleen concrete actiepunten (niet algemene info)
+- Bij twijfel over persoon: gebruik "Allen"
+- Datums alleen als ze expliciet vermeld zijn
+- Maximaal 5 todos, 3 mijlpalen, 3 vragen
+- Als er niets te extraheren is, geef lege arrays`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{role: 'user', content: prompt}]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const extracted = JSON.parse(raw.replace(/```json|```/g, '').trim());
+
+    item.processing = false;
+    item.extracted = extracted;
+
+    if (extracted.todos?.length) {
+      extracted.todos.forEach(t => {
+        const person = t.person && t.person !== 'null' ? t.person : null;
+        const text = person ? `[${person}] ${t.text}` : t.text;
+        todosData.algemeen.unshift({text, done: false});
+        addUrgentItem(t.text, person || 'Allen');
+      });
+      renderTodos('algemeen');
+      renderUrgent();
+    }
+
+    if (extracted.mijlpalen?.length) {
+      extracted.mijlpalen.forEach(m => {
+        const tbody = document.getElementById('planning-table');
+        if (tbody) {
+          const row = document.createElement('tr');
+          row.style.borderBottom = '1px solid var(--obv-border)';
+          row.style.background = '#fdf8f4';
+          row.innerHTML = `<td style="padding:9px 14px;color:var(--obv-brick);font-weight:600;">${m.datum}</td><td style="padding:9px 14px;font-weight:600;">★ ${m.beschrijving}</td><td style="padding:9px 14px;"><span class="badge badge-info">Nieuw</span></td>`;
+          tbody.appendChild(row);
+        }
+      });
+    }
+
+  } catch(e) {
+    item.processing = false;
+    item.extracted = {samenvatting: '(Automatische verwerking niet beschikbaar — Claude API vereist actieve sessie)'};
+  }
+
+  if (type === 'note') renderNotes();
+  else renderVerslagen();
+}
+
+const urgentItems = [
+  {text: 'Checken hoeveel 1m×1m stukken hoac beschikbaar bij Gino (8 nodig)', person: 'Lennert/Ken'},
+  {text: 'Kleine kraan checken in Zele (optie/prijs) — deadline donderdag 22/5', person: 'Bert'},
+  {text: 'Dieplader reserveren voor week 27 bij De Vreese', person: 'Bert'},
+  {text: 'Prolyte vragen voor bouwolifant — eerste ontwerp maken', person: 'Ken/Lennert'},
+  {text: 'Rijplaten Fonteineplein: doet stad Gent dit of doen wij het?', person: 'Bert/Wietse'},
+  {text: 'Afspreken op locatie met plannen — voorstel 5 juni 11u', person: 'Allen'},
+  {text: 'Toestemming terrein Zele van de gebuur regelen', person: 'Jurgen'},
+  {text: 'Hoac aanvragen bij Gino voor augustus', person: 'Ken'},
+];
+
+function addUrgentItem(text, person) {
+  urgentItems.unshift({text, person, isNew: true});
+}
+
+function deleteUrgent(i) {
+  urgentItems.splice(i, 1);
+  renderUrgent();
+}
+
+function renderUrgent() {
+  const container = document.getElementById('urgent-list');
+  if (!container) return;
+  container.innerHTML = urgentItems.map((u, i) => `
+    <div class="urgent-item" style="${u.isNew ? 'background:#fffbf0;' : ''}">
+      <span>${u.isNew ? '✨ ' : ''}${u.text}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        <span class="urgent-who">${u.person}</span>
+        <button onclick="deleteUrgent(${i})" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--obv-muted);padding:0;" title="Verwijderen">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+const documentsData = [];
+let selectedFile = null;
+
+function handleFileUpload(input) {
+  if (input.files && input.files[0]) {
+    selectedFile = input.files[0];
+    const status = document.getElementById('upload-status');
+    status.textContent = `✓ Geselecteerd: ${selectedFile.name}`;
+    status.style.display = 'block';
+    if (!document.getElementById('doc-naam').value) {
+      document.getElementById('doc-naam').value = selectedFile.name;
+    }
+  }
+}
+
+function addDocument() {
+  const naam = document.getElementById('doc-naam').value.trim();
+  const link = document.getElementById('doc-link').value.trim();
+  const cat = document.getElementById('doc-categorie').value;
+  const pijler = document.getElementById('doc-pijler').value;
+  if (!naam) return;
+  const icons = {plan: '📐', verslag: '📋', planning: '📊', contract: '📑', foto: '🖼', overig: '📄'};
+  documentsData.unshift({naam, link, cat, pijler, icon: icons[cat] || '📄', date: new Date().toLocaleDateString('nl-BE'), file: selectedFile ? selectedFile.name : null});
+  document.getElementById('doc-naam').value = '';
+  document.getElementById('doc-link').value = '';
+  document.getElementById('doc-categorie').value = '';
+  document.getElementById('doc-pijler').value = '';
+  document.getElementById('upload-status').style.display = 'none';
+  selectedFile = null;
+  renderDocuments();
+}
+
+function renderDocuments() {
+  const list = document.getElementById('doc-list');
+  if (!documentsData.length) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--obv-muted);text-align:center;padding:1rem 0;">Nog geen documenten toegevoegd via de app.</div>';
+    return;
+  }
+  list.innerHTML = documentsData.map(d => `
+    <div class="doc-item">
+      <div class="doc-icon doc-icon-plan">${d.icon}</div>
+      <div class="doc-info">
+        <div class="doc-name">${d.naam}</div>
+        <div class="doc-meta">${[d.cat, d.pijler, d.date, d.file].filter(Boolean).join(' · ')}</div>
+      </div>
+      ${d.link ? `<a href="${d.link}" target="_blank" class="doc-link">Openen</a>` : ''}
+    </div>
+  `).join('');
+}
+
+function addMijlpaal() {
+  const datum = document.getElementById('plan-datum').value.trim();
+  const desc = document.getElementById('plan-desc').value.trim();
+  if (!datum || !desc) return;
+  const tbody = document.getElementById('planning-table');
+  const row = document.createElement('tr');
+  row.style.borderBottom = '1px solid var(--obv-border)';
+  row.style.background = '#f9f7f4';
+  row.innerHTML = `<td style="padding:9px 14px;color:var(--obv-brick);font-weight:600;">${datum}</td><td style="padding:9px 14px;font-weight:600;">★ ${desc}</td><td style="padding:9px 14px;"><span class="badge badge-todo">Nieuw</span></td>`;
+  tbody.appendChild(row);
+  document.getElementById('plan-datum').value = '';
+  document.getElementById('plan-desc').value = '';
+}
+
+
+// ── STORAGE HELPERS — FIREBASE ──
+let _saveTimeout = null;
+let _listening = false;
+
+async function saveAll() {
+  const data = {
+    todos: todosData,
+    notes: notesData,
+    verslagen: verslagenData,
+    urgent: urgentItems,
+    documents: documentsData,
+    savedAt: new Date().toISOString()
+  };
+  // Debounce: wacht 800ms na laatste wijziging voor we opslaan
+  clearTimeout(_saveTimeout);
+  _saveTimeout = setTimeout(async () => {
+    let saved = false;
+    if (window.firebaseReady) {
+      saved = await window.firebaseSave(data);
+    }
+    if (!saved) {
+      try { localStorage.setItem('gev-appdata', JSON.stringify(data)); } catch(e) {}
+    }
+  }, 800);
+}
+
+async function loadAll() {
+  let data = null;
+  if (window.firebaseReady) {
+    data = await window.firebaseLoad();
+  }
+  if (!data) {
+    try {
+      const raw = localStorage.getItem('gev-appdata');
+      if (raw) data = JSON.parse(raw);
+    } catch(e) {}
+  }
+  if (!data) return false;
+  try {
+    if (data.todos) Object.assign(todosData, data.todos);
+    if (data.notes?.length) { notesData.length = 0; data.notes.forEach(n => notesData.push(n)); }
+    if (data.verslagen?.length) { verslagenData.length = 0; data.verslagen.forEach(v => verslagenData.push(v)); }
+    if (data.urgent?.length) { urgentItems.length = 0; data.urgent.forEach(u => urgentItems.push(u)); }
+    if (data.documents?.length) { documentsData.length = 0; data.documents.forEach(d => documentsData.push(d)); }
+    return true;
+  } catch(e) { return false; }
+}
+
+function startListening() {
+  if (_listening || !window.firebaseReady) return;
+  _listening = true;
+  window.firebaseListen((data) => {
+    try {
+      if (data.todos) Object.assign(todosData, data.todos);
+      if (data.notes?.length) { notesData.length = 0; data.notes.forEach(n => notesData.push(n)); }
+      if (data.verslagen?.length) { verslagenData.length = 0; data.verslagen.forEach(v => verslagenData.push(v)); }
+      if (data.urgent?.length) { urgentItems.length = 0; data.urgent.forEach(u => urgentItems.push(u)); }
+      if (data.documents?.length) { documentsData.length = 0; data.documents.forEach(d => documentsData.push(d)); }
+      ['bert', 'pt', 'deco', 'algemeen', 'bert-ntg', 'pt-ntg'].forEach(renderTodos);
+      renderUrgent(); renderNotes(); renderVerslagen(); renderDocuments();
+      showSyncIndicator();
+    } catch(e) {}
+  });
+}
+
+function showSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  if (!el) return;
+  el.textContent = '✓ Opgeslagen';
+  el.style.color = '#4a7c23';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 2000);
+}
+
+function showSyncIndicator() {
+  const el = document.getElementById('save-indicator');
+  if (!el) return;
+  el.textContent = '↓ Bijgewerkt door collega';
+  el.style.color = '#c4622d';
+  el.style.opacity = '1';
+  setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+// ── PATCH ALLE MUTERENDE FUNCTIES OM OP TE SLAAN ──
+const _origToggleTodo = toggleTodo;
+toggleTodo = function(key, i) { _origToggleTodo(key, i); saveAll().then(showSaveIndicator); };
+
+const _origAddTodo = addTodo;
+addTodo = function(key) { _origAddTodo(key); saveAll().then(showSaveIndicator); };
+
+const _origAddTodoGeneral = addTodoGeneral;
+addTodoGeneral = function() { _origAddTodoGeneral(); saveAll().then(showSaveIndicator); };
+
+const _origDeleteNote = deleteNote;
+deleteNote = function(id) { _origDeleteNote(id); saveAll().then(showSaveIndicator); };
+
+const _origDeleteVerslag = deleteVerslag;
+deleteVerslag = function(id) { _origDeleteVerslag(id); saveAll().then(showSaveIndicator); };
+
+const _origDeleteUrgent = deleteUrgent;
+deleteUrgent = function(i) { _origDeleteUrgent(i); saveAll().then(showSaveIndicator); };
+
+const _origAddDocument = addDocument;
+addDocument = function() { _origAddDocument(); saveAll().then(showSaveIndicator); };
+
+const _origAddMijlpaal = addMijlpaal;
+addMijlpaal = function() { _origAddMijlpaal(); saveAll().then(showSaveIndicator); };
+
+// patch addNote & addVerslag (async) — save na Claude extractie
+const _origAddNote = addNote;
+addNote = async function() {
+  await _origAddNote();
+  await saveAll();
+  showSaveIndicator();
+};
+
+const _origAddVerslag = addVerslag;
+addVerslag = async function() {
+  await _origAddVerslag();
+  await saveAll();
+  showSaveIndicator();
+};
+
+// ── OPSTART: laad data, render alles ──
+async function init() {
+  // Wacht op Firebase als het nog niet klaar is (max 3 seconden)
+  if (!window.firebaseReady) {
+    await new Promise(resolve => {
+      const timeout = setTimeout(resolve, 3000);
+      document.addEventListener('firebase-ready', () => { clearTimeout(timeout); resolve(); }, { once: true });
+    });
+  }
+  await loadAll();
+  loadTodos();
+  ['bert', 'pt', 'deco', 'algemeen', 'bert-ntg', 'pt-ntg'].forEach(renderTodos);
+  renderUrgent();
+  renderNotes();
+  renderVerslagen();
+  renderDocuments();
+  startListening();
+}
+
+// ── WACHTWOORD ──
+function checkPw() {
+  const input = document.getElementById('pw-input');
+  const err = document.getElementById('pw-error');
+  const passwords = ['gevelnevel'];
+  if (passwords.includes(input.value.toLowerCase().trim())) {
+    document.getElementById('pw-screen').classList.add('hidden');
+    document.getElementById('app-content').style.display = 'block';
+    try { sessionStorage.setItem('gev-auth', '1'); } catch(e) {}
+    init();
+  } else {
+    input.classList.add('error');
+    err.textContent = 'Ongeldig wachtwoord. Probeer opnieuw.';
+    input.value = '';
+    setTimeout(() => { input.classList.remove('error'); err.textContent = ''; }, 2000);
+  }
+}
+
+(function() {
+  try {
+    if (sessionStorage.getItem('gev-auth') === '1') {
+      document.getElementById('pw-screen').classList.add('hidden');
+      document.getElementById('app-content').style.display = 'block';
+      init();
+    }
+  } catch(e) {}
+})();
+
+</script>
+
+</div></body>
+</html>
